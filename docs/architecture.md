@@ -170,3 +170,4 @@ Resumes contain Personally Identifiable Information (PII). The application enfor
 2. **Strict User Isolation**: All database queries for analyses, resumes, and recommendations filter by `user_id` extracted from the cryptographically verified JWT (`flask_jwt_extended`). A user cannot access or enumerate another user's records.
 3. **MIME & Magic Byte Validation**: Filename extensions are never trusted. File headers are checked against standard byte signatures (`%PDF-` for PDFs, `PK\x03\x04` for DOCX).
 4. **OWASP Compliance**: Parameterized queries via SQLAlchemy ORM (SQL Injection immunity), password hashing using `bcrypt` (12 work factor rounds), and explicit CORS whitelists.
+

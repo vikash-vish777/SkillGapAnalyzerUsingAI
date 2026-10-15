@@ -252,3 +252,4 @@ All endpoints follow strict REST architectural principles:
 - **`GET /api/users/me`**: Get current user profile and summary statistics.
 - **`PATCH /api/users/me`**: Update user profile details.
 - **`DELETE /api/users/me`**: GDPR-compliant account and data deletion.
+

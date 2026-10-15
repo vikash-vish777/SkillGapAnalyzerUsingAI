@@ -46,3 +46,4 @@ The system enforces high testing coverage across both backend deterministic logi
 3. **Authentication Lifecycles**:
    - Unauthenticated requests to protected endpoints return HTTP 401.
    - Tampered JWT signature returns HTTP 401.
+

@@ -225,3 +225,4 @@ Personalized roadmap items generated for a candidate's missing skills.
   - `completion_status`: ENUM('pending', 'in_progress', 'completed'), DEFAULT 'pending'
   - `created_at`: DATETIME, DEFAULT CURRENT_TIMESTAMP
   - `updated_at`: DATETIME, DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+

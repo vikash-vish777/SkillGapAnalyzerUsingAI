@@ -93,3 +93,4 @@ backend/temp/
 *.docx
 !backend/tests/fixtures/*.pdf
 !backend/tests/fixtures/*.docx
+
