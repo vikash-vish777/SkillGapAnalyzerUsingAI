@@ -23,3 +23,4 @@ def test_404_error_handler(client):
     json_data = response.get_json()
     assert json_data["success"] is False
     assert "not found" in json_data["message"].lower()
+

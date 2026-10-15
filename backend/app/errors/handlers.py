@@ -66,3 +66,4 @@ def register_error_handlers(app):
             "data": None,
             "errors": None
         }), 500
+

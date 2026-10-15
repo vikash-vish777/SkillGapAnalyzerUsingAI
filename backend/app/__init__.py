@@ -4,6 +4,10 @@ from app.config import config_by_name
 from app.extensions import db, migrate, jwt, cors, limiter
 from app.errors.handlers import register_error_handlers
 from app.routes.health import health_bp
+from app.routes.job_roles import job_roles_bp
+
+# Import models so SQLAlchemy and Alembic register all entities
+import app.models  # noqa: F401
 
 def create_app(config_name=None):
     """Application factory for Skill Gap Analyzer API."""
@@ -31,5 +35,6 @@ def create_app(config_name=None):
 
     # Register blueprints with /api prefix
     app.register_blueprint(health_bp, url_prefix="/api")
+    app.register_blueprint(job_roles_bp, url_prefix="/api")
 
     return app

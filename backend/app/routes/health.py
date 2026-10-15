@@ -25,3 +25,4 @@ def health_check():
         },
         "errors": None
     }), 200
+
