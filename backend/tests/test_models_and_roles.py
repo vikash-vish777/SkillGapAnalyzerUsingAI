@@ -92,3 +92,4 @@ def test_get_job_role_not_found(client):
     data = response.get_json()
     assert data["success"] is False
     assert "not found" in data["message"].lower()
+

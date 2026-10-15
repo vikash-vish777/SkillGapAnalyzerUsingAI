@@ -126,3 +126,4 @@ CREATE TABLE IF NOT EXISTS `recommendations` (
   CONSTRAINT `fk_rec_skill` FOREIGN KEY (`skill_id`) REFERENCES `skills` (`id`) ON DELETE RESTRICT,
   INDEX `idx_rec_analysis` (`analysis_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

@@ -1,7 +1,17 @@
 from flask import jsonify
+from app.errors.exceptions import AppError
 
 def register_error_handlers(app):
     """Registers standardized JSON error handlers for common HTTP status codes."""
+
+    @app.errorhandler(AppError)
+    def handle_app_error(error):
+        return jsonify({
+            "success": False,
+            "message": error.message,
+            "data": None,
+            "errors": error.details if error.details else None
+        }), error.status_code
 
     @app.errorhandler(400)
     def bad_request(error):
