@@ -90,3 +90,4 @@ class TextPreprocessor:
         for placeholder, original in cls.REVERSE_PROTECTED_TERMS.items():
             restored = restored.replace(placeholder, original)
         return restored
+

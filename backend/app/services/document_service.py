@@ -145,3 +145,4 @@ class DocumentService:
             return cls.extract_text_from_docx(file_bytes)
         else:
             raise UnsupportedFileTypeError(f"Cannot extract text from unsupported type: {file_type}")
+

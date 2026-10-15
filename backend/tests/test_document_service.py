@@ -145,3 +145,4 @@ def test_resume_upload_missing_file_part(client):
     res_json = response.get_json()
     assert res_json["success"] is False
     assert "No file part" in res_json["message"]
+

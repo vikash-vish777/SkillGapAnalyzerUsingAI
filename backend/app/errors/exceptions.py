@@ -24,3 +24,4 @@ class EmptyDocumentError(AppError):
 class DocumentProcessingError(AppError):
     """Raised when parsing or text extraction from a document fails."""
     status_code = 422
+
