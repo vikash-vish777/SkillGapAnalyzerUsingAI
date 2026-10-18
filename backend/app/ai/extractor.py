@@ -285,3 +285,4 @@ class SkillExtractor:
                         break
 
         return found_skills
+

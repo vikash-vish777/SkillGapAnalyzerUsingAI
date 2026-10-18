@@ -6,6 +6,9 @@ from app.ai.preprocessor import TextPreprocessor
 from app.ai.extractor import SkillExtractor
 from app.ai.normalizer import SkillNormalizer
 from app.services.matching_engine import SkillMatchingEngine
+from app.services.recommendation_service import RecommendationService
+from app.services.career_advisor import CareerAdvisorService
+from app.ai.semantic_matcher import SemanticMatcher
 
 analyses_bp = Blueprint("analyses", __name__)
 extractor = SkillExtractor()
@@ -81,8 +84,26 @@ def analyze_skill_gap():
                     "requirement_type": "essential",
                 })
 
-    # 7. Execute Skill Matching & Gap Scoring
+    # 7. Execute Deterministic Skill Matching & Gap Scoring
     match_result = SkillMatchingEngine.compare_skills(candidate_skills, role_requirements)
+
+    # 8. Generate Actionable Learning Recommendations
+    recommendations = RecommendationService.generate_recommendations(match_result["missing_skills"])
+
+    # 9. Discover Alternative Career Paths
+    career_suggestions = CareerAdvisorService.recommend_alternative_roles(
+        candidate_skills,
+        current_job_role_id=role.id,
+        min_overlap_threshold=25.0,
+        limit=3,
+    )
+
+    # 10. Semantic Similarity Analysis (TF-IDF + Cosine)
+    jd_reference_text = (
+        custom_jd if (custom_jd and custom_jd.strip())
+        else f"{role.title}. {role.description or ''}. Skills required: {', '.join([r['skill_name'] for r in role_requirements])}"
+    )
+    semantic_report = SemanticMatcher.compute_similarity(cleaned_text, jd_reference_text)
 
     response_data = {
         "job_role": {
@@ -99,6 +120,9 @@ def analyze_skill_gap():
         "essential_missing_skills": match_result["essential_missing_skills"],
         "preferred_missing_skills": match_result["preferred_missing_skills"],
         "additional_skills": match_result["additional_skills"],
+        "recommendations": recommendations,
+        "suggested_career_roles": career_suggestions,
+        "semantic_similarity": semantic_report,
         "algorithm_version": match_result["algorithm_version"],
     }
 

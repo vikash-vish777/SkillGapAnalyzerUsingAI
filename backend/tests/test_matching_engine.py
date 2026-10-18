@@ -161,3 +161,4 @@ def test_full_skill_gap_analysis_endpoint(client):
     assert "Docker" in [s["name"] for s in analysis["preferred_missing_skills"]]
     assert analysis["match_percentage"] > 0
     assert analysis["algorithm_version"] == "v1.0"
+

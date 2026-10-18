@@ -39,3 +39,4 @@ class SkillNormalizer:
             })
 
         return normalized_results
+
