@@ -110,3 +110,4 @@ def logout():
         "data": None,
         "errors": None,
     }), 200
+

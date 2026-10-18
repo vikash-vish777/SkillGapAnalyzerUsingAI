@@ -47,6 +47,11 @@ const Navbar = () => {
                     <i className="bi bi-speedometer2 me-1"></i> Dashboard
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link className="nav-link px-3" to="/history">
+                    <i className="bi bi-clock-history me-1"></i> History
+                  </Link>
+                </li>
                 <li className="nav-item dropdown">
                   <div className="d-flex align-items-center gap-2 ms-lg-2">
                     <span className="badge bg-secondary-subtle text-light border border-secondary px-3 py-2 rounded-pill">

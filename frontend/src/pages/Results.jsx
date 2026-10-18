@@ -44,8 +44,34 @@ const Results = () => {
     algorithm_version,
   } = analysis;
 
-  const handlePrint = () => {
-    window.print();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (analysis.id) {
+      setDownloading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/analyses/${analysis.id}/report`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!response.ok) throw new Error('PDF generation failed');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `skill-gap-report-${analysis.id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        window.print();
+      } finally {
+        setDownloading(false);
+      }
+    } else {
+      window.print();
+    }
   };
 
   return (
@@ -68,8 +94,17 @@ const Results = () => {
         </div>
 
         <div className="d-flex gap-2">
-          <button onClick={handlePrint} className="btn btn-outline-secondary rounded-pill px-3">
-            <i className="bi bi-printer me-1"></i> Print / Save PDF
+          <button
+            onClick={handleDownloadPdf}
+            disabled={downloading}
+            className="btn btn-outline-secondary rounded-pill px-3"
+          >
+            {downloading ? (
+              <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+            ) : (
+              <i className="bi bi-file-earmark-pdf me-1"></i>
+            )}
+            Download PDF Report
           </button>
           <Link to="/analyze" className="btn btn-primary rounded-pill px-3 shadow-sm">
             <i className="bi bi-arrow-repeat me-1"></i> Analyze Another
@@ -398,3 +433,4 @@ const Results = () => {
 };
 
 export default Results;
+

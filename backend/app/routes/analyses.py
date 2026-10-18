@@ -1,6 +1,14 @@
-from flask import Blueprint, request, jsonify
+import io
+from flask import Blueprint, request, jsonify, send_file
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.job_role import JobRole
+from app.models.user import User
+from app.models.resume import Resume
+from app.models.analysis import Analysis
+from app.models.analysis_skill import AnalysisSkill
+from app.models.recommendation import Recommendation
+from app.models.skill import Skill
 from app.services.document_service import DocumentService
 from app.ai.preprocessor import TextPreprocessor
 from app.ai.extractor import SkillExtractor
@@ -9,13 +17,15 @@ from app.services.matching_engine import SkillMatchingEngine
 from app.services.recommendation_service import RecommendationService
 from app.services.career_advisor import CareerAdvisorService
 from app.ai.semantic_matcher import SemanticMatcher
+from app.services.report_service import ReportService
 
 analyses_bp = Blueprint("analyses", __name__)
 extractor = SkillExtractor()
 
 @analyses_bp.route("/analyses", methods=["POST"])
+@jwt_required(optional=True)
 def analyze_skill_gap():
-    """Uploads a resume, extracts skills, compares against a target job role, and calculates skill gaps."""
+    """Uploads a resume, extracts skills, compares against a target job role, and persists analysis."""
     # 1. Validate file presence
     if "file" not in request.files:
         return jsonify({
@@ -105,7 +115,84 @@ def analyze_skill_gap():
     )
     semantic_report = SemanticMatcher.compute_similarity(cleaned_text, jd_reference_text)
 
+    analysis_id = None
+    user_id = get_jwt_identity()
+
+    # 11. Relational Persistence (When User is Authenticated)
+    if user_id:
+        try:
+            uid = int(user_id)
+            # Create Resume record
+            resume = Resume(
+                user_id=uid,
+                original_filename=file_storage.filename,
+                file_type=file_type,
+                processing_status="completed",
+            )
+            db.session.add(resume)
+            db.session.flush()
+
+            # Create Analysis record
+            analysis_record = Analysis(
+                user_id=uid,
+                resume_id=resume.id,
+                job_role_id=role.id,
+                match_percentage=match_result["match_percentage"],
+                weighted_match_percentage=match_result["weighted_match_percentage"],
+                algorithm_version=match_result["algorithm_version"],
+            )
+            db.session.add(analysis_record)
+            db.session.flush()
+            analysis_id = analysis_record.id
+
+            # Save Analysis Skills
+            for s in match_result["matched_skills"]:
+                if s.get("skill_id"):
+                    db.session.add(AnalysisSkill(
+                        analysis_id=analysis_record.id,
+                        skill_id=s["skill_id"],
+                        match_status="matched",
+                        importance_weight=s.get("importance_weight", 1.0),
+                        evidence=s.get("evidence"),
+                        confidence_score=s.get("confidence_score", 1.0),
+                    ))
+
+            for s in match_result["missing_skills"]:
+                if s.get("skill_id"):
+                    db.session.add(AnalysisSkill(
+                        analysis_id=analysis_record.id,
+                        skill_id=s["skill_id"],
+                        match_status="missing",
+                        importance_weight=s.get("importance_weight", 1.0),
+                    ))
+
+            for s in match_result["additional_skills"]:
+                if s.get("skill_id"):
+                    db.session.add(AnalysisSkill(
+                        analysis_id=analysis_record.id,
+                        skill_id=s["skill_id"],
+                        match_status="additional",
+                        evidence=s.get("evidence"),
+                    ))
+
+            # Save Recommendations
+            for r in recommendations:
+                if r.get("skill_id"):
+                    rec_text = f"{r['reason']} Topics: {', '.join(r.get('recommended_topics', []))}. Exercise: {r.get('practice_exercise')}"
+                    db.session.add(Recommendation(
+                        analysis_id=analysis_record.id,
+                        skill_id=r["skill_id"],
+                        priority=r["priority"],
+                        recommendation_text=rec_text,
+                    ))
+
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            print(f"[!] Warning: Analysis persistence failed: {str(exc)}")
+
     response_data = {
+        "id": analysis_id,
         "job_role": {
             "id": role.id,
             "title": role.title,
@@ -132,3 +219,121 @@ def analyze_skill_gap():
         "data": response_data,
         "errors": None,
     }), 200
+
+@analyses_bp.route("/analyses", methods=["GET"])
+@jwt_required()
+def get_user_analyses():
+    """Retrieves all past analyses created by the authenticated user."""
+    user_id = int(get_jwt_identity())
+    analyses = (
+        Analysis.query.filter_by(user_id=user_id)
+        .order_by(Analysis.created_at.desc())
+        .all()
+    )
+
+    data = [a.to_dict(include_details=False) for a in analyses]
+    return jsonify({
+        "success": True,
+        "message": f"Retrieved {len(data)} past analyses.",
+        "data": data,
+        "errors": None,
+    }), 200
+
+@analyses_bp.route("/analyses/<int:analysis_id>", methods=["GET"])
+@jwt_required()
+def get_analysis_detail(analysis_id: int):
+    """Retrieves full details of a specific past analysis with ownership verification."""
+    user_id = int(get_jwt_identity())
+    analysis = db.session.get(Analysis, analysis_id)
+
+    if not analysis:
+        return jsonify({
+            "success": False,
+            "message": f"Analysis with ID {analysis_id} not found.",
+            "data": None,
+            "errors": None,
+        }), 404
+
+    # Strict User Record Isolation Check
+    if analysis.user_id != user_id:
+        return jsonify({
+            "success": False,
+            "message": "Access denied: You do not have permission to view this analysis.",
+            "data": None,
+            "errors": None,
+        }), 403
+
+    return jsonify({
+        "success": True,
+        "message": "Analysis details retrieved successfully.",
+        "data": analysis.to_dict(include_details=True),
+        "errors": None,
+    }), 200
+
+@analyses_bp.route("/analyses/<int:analysis_id>", methods=["DELETE"])
+@jwt_required()
+def delete_analysis(analysis_id: int):
+    """Deletes an analysis session owned by the authenticated user."""
+    user_id = int(get_jwt_identity())
+    analysis = db.session.get(Analysis, analysis_id)
+
+    if not analysis:
+        return jsonify({
+            "success": False,
+            "message": f"Analysis with ID {analysis_id} not found.",
+            "data": None,
+            "errors": None,
+        }), 404
+
+    if analysis.user_id != user_id:
+        return jsonify({
+            "success": False,
+            "message": "Access denied: You cannot delete another user's analysis.",
+            "data": None,
+            "errors": None,
+        }), 403
+
+    db.session.delete(analysis)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": f"Analysis #{analysis_id} deleted successfully.",
+        "data": None,
+        "errors": None,
+    }), 200
+
+@analyses_bp.route("/analyses/<int:analysis_id>/report", methods=["GET"])
+@jwt_required()
+def download_pdf_report(analysis_id: int):
+    """Generates and streams a downloadable PDF report for an analysis."""
+    user_id = int(get_jwt_identity())
+    user = db.session.get(User, user_id)
+    analysis = db.session.get(Analysis, analysis_id)
+
+    if not analysis:
+        return jsonify({
+            "success": False,
+            "message": f"Analysis with ID {analysis_id} not found.",
+            "data": None,
+            "errors": None,
+        }), 404
+
+    # Strict User Record Isolation Check
+    if analysis.user_id != user_id:
+        return jsonify({
+            "success": False,
+            "message": "Access denied: You can only download reports for your own analyses.",
+            "data": None,
+            "errors": None,
+        }), 403
+
+    candidate_name = user.full_name if user else "Candidate"
+    pdf_bytes = ReportService.generate_pdf_report(analysis, candidate_name)
+
+    return send_file(
+        io.BytesIO(pdf_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"skill-gap-report-{analysis_id}.pdf",
+    )

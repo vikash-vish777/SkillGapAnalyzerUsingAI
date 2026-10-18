@@ -112,3 +112,4 @@ def test_unauthorized_user_profile(client):
     """Test GET /api/users/me without Bearer token returns 401."""
     response = client.get("/api/users/me")
     assert response.status_code == 401
+

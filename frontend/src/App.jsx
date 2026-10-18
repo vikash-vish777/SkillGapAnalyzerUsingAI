@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Analyze from './pages/Analyze';
 import Results from './pages/Results';
+import History from './pages/History';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/analyze" element={<Analyze />} />
               <Route path="/results" element={<Results />} />
+              <Route path="/history" element={<History />} />
               <Route
                 path="*"
                 element={
