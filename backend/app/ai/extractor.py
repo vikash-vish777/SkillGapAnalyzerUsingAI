@@ -82,6 +82,11 @@ SKILL_DICTIONARY = {
         "aliases": ["django", "django rest framework", "drf"],
         "case_sensitive": False,
     },
+    "FastAPI": {
+        "category": "Backend",
+        "aliases": ["fastapi", "fast api"],
+        "case_sensitive": False,
+    },
     "Spring Boot": {
         "category": "Backend",
         "aliases": ["spring boot", "springboot", "spring framework", "spring mvc"],

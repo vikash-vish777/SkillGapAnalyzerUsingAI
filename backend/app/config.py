@@ -49,6 +49,11 @@ class Config:
         "pool_pre_ping": True,
     }
 
+    # Rate Limiting
+    RATELIMIT_ENABLED = True
+    RATELIMIT_DEFAULT = "200 per day;50 per hour"
+    RATELIMIT_STRATEGY = "fixed-window"
+
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
@@ -58,6 +63,7 @@ class TestingConfig(Config):
     """Testing configuration."""
     DEBUG = False
     TESTING = True
+    RATELIMIT_ENABLED = False  # Disabled by default in tests to prevent false throttles
     # Testing uses in-memory or isolated SQLite
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=5)

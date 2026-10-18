@@ -157,3 +157,4 @@ class ReportService:
         pdf_bytes = doc.tobytes()
         doc.close()
         return pdf_bytes
+

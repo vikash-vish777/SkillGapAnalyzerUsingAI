@@ -1,7 +1,7 @@
 import io
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.extensions import db
+from app.extensions import db, limiter
 from app.models.job_role import JobRole
 from app.models.user import User
 from app.models.resume import Resume
@@ -23,6 +23,7 @@ analyses_bp = Blueprint("analyses", __name__)
 extractor = SkillExtractor()
 
 @analyses_bp.route("/analyses", methods=["POST"])
+@limiter.limit("10 per minute")
 @jwt_required(optional=True)
 def analyze_skill_gap():
     """Uploads a resume, extracts skills, compares against a target job role, and persists analysis."""
@@ -204,6 +205,7 @@ def analyze_skill_gap():
         "matched_count": match_result["matched_count"],
         "missing_count": match_result["missing_count"],
         "matched_skills": match_result["matched_skills"],
+        "missing_skills": match_result["missing_skills"],
         "essential_missing_skills": match_result["essential_missing_skills"],
         "preferred_missing_skills": match_result["preferred_missing_skills"],
         "additional_skills": match_result["additional_skills"],

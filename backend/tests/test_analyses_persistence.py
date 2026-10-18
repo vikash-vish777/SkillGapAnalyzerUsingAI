@@ -160,3 +160,4 @@ def test_delete_analysis_owned_by_user(client):
     # Ensure it's deleted
     get_res = client.get(f"/api/analyses/{analysis_id}", headers={"Authorization": f"Bearer {token}"})
     assert get_res.status_code == 404
+

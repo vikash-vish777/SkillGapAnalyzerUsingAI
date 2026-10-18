@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
+from app.extensions import limiter
 from app.services.document_service import DocumentService
 from app.ai.preprocessor import TextPreprocessor
 
 resumes_bp = Blueprint("resumes", __name__)
 
 @resumes_bp.route("/resumes/upload", methods=["POST"])
+@limiter.limit("10 per minute")
 def upload_and_extract_resume():
     """Uploads a PDF or DOCX resume, validates its signature, and extracts clean text."""
     if "file" not in request.files:

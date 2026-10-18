@@ -1,4 +1,5 @@
-from flask import jsonify
+from flask import jsonify, current_app
+from werkzeug.exceptions import HTTPException
 from app.errors.exceptions import AppError
 
 def register_error_handlers(app):
@@ -70,6 +71,20 @@ def register_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_server_error(error):
+        return jsonify({
+            "success": False,
+            "message": "An internal server error occurred. Please try again later.",
+            "data": None,
+            "errors": None
+        }), 500
+
+    @app.errorhandler(Exception)
+    def handle_unhandled_exception(error):
+        # Allow standard HTTP exceptions (400, 401, 403, 404, 429, etc.) to pass through
+        if isinstance(error, HTTPException):
+            return error
+
+        current_app.logger.error(f"Unhandled Exception: {str(error)}", exc_info=True)
         return jsonify({
             "success": False,
             "message": "An internal server error occurred. Please try again later.",

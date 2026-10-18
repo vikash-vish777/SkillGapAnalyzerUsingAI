@@ -1,7 +1,7 @@
 import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
-from app.extensions import db
+from app.extensions import db, limiter
 from app.models.user import User
 
 auth_bp = Blueprint("auth", __name__)
@@ -9,6 +9,7 @@ auth_bp = Blueprint("auth", __name__)
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 @auth_bp.route("/auth/register", methods=["POST"])
+@limiter.limit("5 per minute")
 def register():
     """Registers a new user account and returns a JWT access token."""
     data = request.get_json(silent=True) or {}
@@ -65,6 +66,7 @@ def register():
     }), 201
 
 @auth_bp.route("/auth/login", methods=["POST"])
+@limiter.limit("5 per minute")
 def login():
     """Authenticates a user with email and password and returns a JWT access token."""
     data = request.get_json(silent=True) or {}
