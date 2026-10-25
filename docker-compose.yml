@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: skill_gap_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secure_password_123
+      MYSQL_DATABASE: skill_gap_db
+      MYSQL_USER: skill_user
+      MYSQL_PASSWORD: skill_secure_password_123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secure_password_123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - skill_gap_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: skill_gap_backend
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: skill_user
+      DB_PASSWORD: skill_secure_password_123
+      DB_NAME: skill_gap_db
+      USE_SQLITE_FALLBACK: "false"
+      SECRET_KEY: ${SECRET_KEY:-prod-secret-key-skill-gap-change-me}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-prod-jwt-secret-key-change-me}
+      CORS_ORIGINS: "http://localhost,http://localhost:80,http://127.0.0.1,http://127.0.0.1:80"
+      PORT: 5000
+      GUNICORN_WORKERS: 4
+      GUNICORN_THREADS: 2
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - skill_gap_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: skill_gap_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - skill_gap_net
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  skill_gap_net:
+    driver: bridge
+

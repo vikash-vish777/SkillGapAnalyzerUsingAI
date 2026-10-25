@@ -134,3 +134,4 @@ Referrer-Policy: strict-origin-when-cross-origin
 | **A08: Software & Data Integrity Failures** | Magic-byte signature checking (`%PDF-`, `PK\x03\x04`), rejection of disguised executables (`MZ`, `ELF`). |
 | **A09: Security Logging & Monitoring** | Standardized JSON error handlers, structured server logs without leaking passwords, tokens, or personal identifiers. |
 | **A10: Server-Side Request Forgery (SSRF)** | Static verified learning resource URLs; no dynamic server-side fetching of arbitrary user-submitted external URLs. |
+
