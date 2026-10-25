@@ -7,14 +7,21 @@ const Results = () => {
   const [analysis, setAnalysis] = useState(null);
   const [selectedEvidence, setSelectedEvidence] = useState(null);
   const [activeTab, setActiveTab] = useState('matched');
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    // Read from route state or fall back to sessionStorage
-    const currentData = location.state?.analysis || JSON.parse(sessionStorage.getItem('current_analysis') || 'null');
-    if (!currentData) {
+    try {
+      const currentData =
+        location.state?.analysis ||
+        JSON.parse(sessionStorage.getItem('current_analysis') || 'null');
+      if (!currentData) {
+        navigate('/analyze');
+      } else {
+        setAnalysis(currentData);
+      }
+    } catch (err) {
+      console.error('Error loading analysis data:', err);
       navigate('/analyze');
-    } else {
-      setAnalysis(currentData);
     }
   }, [location, navigate]);
 
@@ -27,24 +34,28 @@ const Results = () => {
     );
   }
 
-  const {
-    job_role,
-    match_percentage,
-    weighted_match_percentage,
-    total_required_count,
-    matched_count,
-    missing_count,
-    matched_skills,
-    essential_missing_skills,
-    preferred_missing_skills,
-    additional_skills,
-    recommendations,
-    suggested_career_roles,
-    semantic_similarity,
-    algorithm_version,
-  } = analysis;
-
-  const [downloading, setDownloading] = useState(false);
+  // Safe defaults for all properties to prevent rendering crashes
+  const job_role = analysis.job_role || {
+    title: analysis.job_role_title || 'Target Role',
+    category: 'Evaluation',
+  };
+  const match_percentage = analysis.match_percentage ?? 0;
+  const weighted_match_percentage = analysis.weighted_match_percentage ?? 0;
+  const total_required_count = analysis.total_required_count ?? 0;
+  const matched_count = analysis.matched_count ?? 0;
+  const missing_count = analysis.missing_count ?? 0;
+  const matched_skills = analysis.matched_skills || [];
+  const essential_missing_skills = analysis.essential_missing_skills || [];
+  const preferred_missing_skills = analysis.preferred_missing_skills || [];
+  const additional_skills = analysis.additional_skills || [];
+  const recommendations = analysis.recommendations || [];
+  const suggested_career_roles = analysis.suggested_career_roles || [];
+  const semantic_similarity = analysis.semantic_similarity || {
+    interpretation: 'Evaluated',
+    similarity_percentage: 0,
+    shared_keywords: [],
+  };
+  const algorithm_version = analysis.algorithm_version || 'v1.0';
 
   const handleDownloadPdf = async () => {
     if (analysis.id) {
@@ -125,9 +136,15 @@ const Results = () => {
             </div>
             <div className="progress mb-2" style={{ height: '8px' }}>
               <div
-                className={`progress-bar ${match_percentage >= 70 ? 'bg-success' : match_percentage >= 40 ? 'bg-warning' : 'bg-danger'}`}
+                className={`progress-bar ${
+                  match_percentage >= 70
+                    ? 'bg-success'
+                    : match_percentage >= 40
+                    ? 'bg-warning'
+                    : 'bg-danger'
+                }`}
                 role="progressbar"
-                style={{ width: `${match_percentage}%` }}
+                style={{ width: `${Math.max(0, Math.min(100, match_percentage))}%` }}
               ></div>
             </div>
             <p className="small text-muted mb-0">
@@ -149,7 +166,7 @@ const Results = () => {
               <div
                 className="progress-bar bg-success"
                 role="progressbar"
-                style={{ width: `${weighted_match_percentage}%` }}
+                style={{ width: `${Math.max(0, Math.min(100, weighted_match_percentage))}%` }}
               ></div>
             </div>
             <p className="small text-muted mb-0">
@@ -168,10 +185,11 @@ const Results = () => {
               {semantic_similarity?.interpretation || 'Evaluated'}
             </div>
             <span className="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 rounded-pill mx-auto mb-2">
-              {semantic_similarity?.similarity_percentage}% Cosine Similarity
+              {semantic_similarity?.similarity_percentage ?? 0}% Cosine Similarity
             </span>
             <p className="small text-muted mb-0">
-              Shared vocabulary: {semantic_similarity?.shared_keywords?.slice(0, 4).join(', ') || 'N/A'}
+              Shared vocabulary:{' '}
+              {(semantic_similarity?.shared_keywords || []).slice(0, 4).join(', ') || 'N/A'}
             </p>
           </div>
         </div>
@@ -185,31 +203,39 @@ const Results = () => {
               onClick={() => setActiveTab('matched')}
               className={`nav-link rounded-pill px-4 ${activeTab === 'matched' ? 'active' : ''}`}
             >
-              <i className="bi bi-check-circle-fill me-1"></i> Matched ({matched_skills?.length || 0})
+              <i className="bi bi-check-circle-fill me-1"></i> Matched ({matched_skills.length})
             </button>
           </li>
           <li className="nav-item">
             <button
               onClick={() => setActiveTab('essential')}
-              className={`nav-link rounded-pill px-4 ${activeTab === 'essential' ? 'active bg-danger' : ''}`}
+              className={`nav-link rounded-pill px-4 ${
+                activeTab === 'essential' ? 'active bg-danger' : ''
+              }`}
             >
-              <i className="bi bi-exclamation-diamond-fill me-1"></i> Essential Missing ({essential_missing_skills?.length || 0})
+              <i className="bi bi-exclamation-diamond-fill me-1"></i> Essential Missing (
+              {essential_missing_skills.length})
             </button>
           </li>
           <li className="nav-item">
             <button
               onClick={() => setActiveTab('preferred')}
-              className={`nav-link rounded-pill px-4 ${activeTab === 'preferred' ? 'active bg-warning text-dark' : ''}`}
+              className={`nav-link rounded-pill px-4 ${
+                activeTab === 'preferred' ? 'active bg-warning text-dark' : ''
+              }`}
             >
-              <i className="bi bi-info-circle-fill me-1"></i> Preferred Missing ({preferred_missing_skills?.length || 0})
+              <i className="bi bi-info-circle-fill me-1"></i> Preferred Missing (
+              {preferred_missing_skills.length})
             </button>
           </li>
           <li className="nav-item">
             <button
               onClick={() => setActiveTab('additional')}
-              className={`nav-link rounded-pill px-4 ${activeTab === 'additional' ? 'active bg-secondary' : ''}`}
+              className={`nav-link rounded-pill px-4 ${
+                activeTab === 'additional' ? 'active bg-secondary' : ''
+              }`}
             >
-              <i className="bi bi-stars me-1"></i> Additional ({additional_skills?.length || 0})
+              <i className="bi bi-stars me-1"></i> Additional ({additional_skills.length})
             </button>
           </li>
         </ul>
@@ -221,7 +247,7 @@ const Results = () => {
               Skills found in your resume matching this role. Click any skill to view extracted resume sentence evidence.
             </p>
             <div className="d-flex flex-wrap gap-2">
-              {matched_skills?.map((skill, idx) => (
+              {matched_skills.map((skill, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedEvidence(skill)}
@@ -234,6 +260,9 @@ const Results = () => {
                   </span>
                 </button>
               ))}
+              {matched_skills.length === 0 && (
+                <div className="text-muted small">No direct skill matches identified for this role.</div>
+              )}
             </div>
           </div>
         )}
@@ -244,12 +273,15 @@ const Results = () => {
               Critical requirements for this position that were not detected in your resume. Prioritize these first.
             </p>
             <div className="d-flex flex-wrap gap-2">
-              {essential_missing_skills?.map((skill, idx) => (
-                <span key={idx} className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fs-6 fw-normal">
+              {essential_missing_skills.map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill fs-6 fw-normal"
+                >
                   <i className="bi bi-x-circle me-1"></i> {skill.name} ({skill.category})
                 </span>
               ))}
-              {essential_missing_skills?.length === 0 && (
+              {essential_missing_skills.length === 0 && (
                 <div className="text-success small fw-semibold">
                   <i className="bi bi-patch-check-fill me-1"></i> Great job! You matched all essential requirements!
                 </div>
@@ -264,12 +296,15 @@ const Results = () => {
               Secondary or nice-to-have tooling that provides a competitive hiring advantage.
             </p>
             <div className="d-flex flex-wrap gap-2">
-              {preferred_missing_skills?.map((skill, idx) => (
-                <span key={idx} className="badge bg-warning-subtle text-dark border border-warning-subtle px-3 py-2 rounded-pill fs-6 fw-normal">
+              {preferred_missing_skills.map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="badge bg-warning-subtle text-dark border border-warning-subtle px-3 py-2 rounded-pill fs-6 fw-normal"
+                >
                   <i className="bi bi-dash-circle me-1"></i> {skill.name} ({skill.category})
                 </span>
               ))}
-              {preferred_missing_skills?.length === 0 && (
+              {preferred_missing_skills.length === 0 && (
                 <div className="text-muted small">No preferred gaps identified.</div>
               )}
             </div>
@@ -282,11 +317,17 @@ const Results = () => {
               Competencies found in your resume that were not explicitly listed for this role, demonstrating extra versatility.
             </p>
             <div className="d-flex flex-wrap gap-2">
-              {additional_skills?.map((skill, idx) => (
-                <span key={idx} className="badge bg-light text-secondary border px-3 py-2 rounded-pill fs-6 fw-normal">
+              {additional_skills.map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="badge bg-light text-secondary border px-3 py-2 rounded-pill fs-6 fw-normal"
+                >
                   <i className="bi bi-gem me-1"></i> {skill.name} ({skill.category})
                 </span>
               ))}
+              {additional_skills.length === 0 && (
+                <div className="text-muted small">No additional extra skills detected.</div>
+              )}
             </div>
           </div>
         )}
@@ -312,7 +353,7 @@ const Results = () => {
       </div>
 
       {/* Actionable Learning Roadmaps */}
-      {recommendations && recommendations.length > 0 && (
+      {recommendations.length > 0 && (
         <div className="mb-5">
           <div className="mb-3">
             <h4 className="fw-bold mb-1">
@@ -347,8 +388,10 @@ const Results = () => {
                     Key Topics to Study:
                   </h6>
                   <ul className="small text-muted mb-3 ps-3">
-                    {rec.recommended_topics?.map((topic, tIdx) => (
-                      <li key={tIdx} className="mb-1">{topic}</li>
+                    {(rec.recommended_topics || []).map((topic, tIdx) => (
+                      <li key={tIdx} className="mb-1">
+                        {topic}
+                      </li>
                     ))}
                   </ul>
 
@@ -369,14 +412,16 @@ const Results = () => {
                       </span>
                       <div className="d-flex flex-wrap gap-2">
                         {rec.resources.map((res, rIdx) => {
+                          const resUrl = res?.resource_url || '';
+                          const resTitle = res?.title || 'Resource';
                           const isYoutube =
-                            res.resource_url.includes('youtube.com') ||
-                            res.resource_url.includes('youtu.be') ||
-                            res.title.toLowerCase().includes('youtube');
+                            resUrl.includes('youtube.com') ||
+                            resUrl.includes('youtu.be') ||
+                            resTitle.toLowerCase().includes('youtube');
                           return (
                             <a
                               key={rIdx}
-                              href={res.resource_url}
+                              href={resUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className={`btn btn-sm rounded-pill text-decoration-none ${
@@ -388,7 +433,7 @@ const Results = () => {
                                   isYoutube ? 'bi-youtube text-danger' : 'bi-box-arrow-up-right'
                                 } me-1`}
                               ></i>
-                              {res.title}
+                              {resTitle}
                             </a>
                           );
                         })}
@@ -415,7 +460,8 @@ const Results = () => {
           </div>
 
           <p className="text-secondary small mb-4">
-            Our analysis identified specific gaps between your current resume content and what recruiters for <strong>{job_role?.title || 'this role'}</strong> expect. Here is targeted guidance on how to strengthen your resume to pass automated ATS filters and catch recruiters' attention.
+            Our analysis identified specific gaps between your current resume content and what recruiters for{' '}
+            <strong>{job_role?.title || 'this role'}</strong> expect. Here is targeted guidance on how to strengthen your resume to pass automated ATS filters and catch recruiters' attention.
           </p>
 
           <div className="row g-4 mb-4">
@@ -427,19 +473,19 @@ const Results = () => {
                   Specific Issues Identified
                 </h6>
                 <ul className="small text-muted mb-0 ps-3">
-                  {essential_missing_skills && essential_missing_skills.length > 0 && (
+                  {essential_missing_skills.length > 0 && (
                     <li className="mb-2">
                       <strong>Missing Core Essential Competencies:</strong> Your resume lacks evidence for core requirements like{' '}
                       <span className="text-danger fw-semibold">
-                        {essential_missing_skills.map((s) => s.name).join(', ')}
+                        {essential_missing_skills.map((s) => s?.name || '').filter(Boolean).join(', ')}
                       </span>
                       . Automated ATS filters will deprioritize applications missing these prerequisites.
                     </li>
                   )}
-                  {semantic_similarity?.similarity_percentage < 35 && (
+                  {(semantic_similarity?.similarity_percentage ?? 0) < 35 && (
                     <li className="mb-2">
                       <strong>Low Industry Keyword Density:</strong> Semantic vocabulary match is at{' '}
-                      <span className="fw-semibold">{semantic_similarity?.similarity_percentage}%</span>. The technical phrasing in your project descriptions diverges from standard market job descriptions.
+                      <span className="fw-semibold">{semantic_similarity?.similarity_percentage ?? 0}%</span>. The technical phrasing in your project descriptions diverges from standard market job descriptions.
                     </li>
                   )}
                   <li className="mb-2">
@@ -463,7 +509,11 @@ const Results = () => {
                   <li className="mb-2">
                     <strong>Add Missing Skills to Your Technical Skills Matrix:</strong> Explicitly add missing technologies once practiced:{' '}
                     <span className="badge bg-primary-subtle text-primary me-1">
-                      {(essential_missing_skills || []).map((s) => s.name).slice(0, 3).join(', ') || 'Docker, SQL, Git'}
+                      {essential_missing_skills
+                        .map((s) => s?.name || '')
+                        .filter(Boolean)
+                        .slice(0, 3)
+                        .join(', ') || 'Docker, SQL, Git'}
                     </span>
                   </li>
                   <li className="mb-2">
@@ -537,7 +587,7 @@ const Results = () => {
       )}
 
       {/* Alternative Career Paths */}
-      {suggested_career_roles && suggested_career_roles.length > 0 && (
+      {suggested_career_roles.length > 0 && (
         <div className="mb-5">
           <div className="mb-3">
             <h4 className="fw-bold mb-1">
@@ -555,16 +605,14 @@ const Results = () => {
                 <div className="card h-100 border-0 shadow-sm p-4">
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <span className="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1">
-                      {career.category}
+                      {career.category || 'General'}
                     </span>
                     <span className="badge bg-success-subtle text-success fs-6 fw-bold px-2 py-1 rounded-pill">
                       {career.match_percentage}% Match
                     </span>
                   </div>
                   <h5 className="fw-bold mb-2 text-dark">{career.title}</h5>
-                  <p className="small text-muted mb-3">
-                    {career.recommendation_reason}
-                  </p>
+                  <p className="small text-muted mb-3">{career.recommendation_reason}</p>
                   <div className="small text-muted mt-auto pt-2 border-top">
                     <i className="bi bi-info-circle me-1"></i>
                     {career.disclaimer}
@@ -580,4 +628,3 @@ const Results = () => {
 };
 
 export default Results;
-

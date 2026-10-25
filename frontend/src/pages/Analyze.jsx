@@ -93,16 +93,14 @@ const Analyze = () => {
     }
 
     try {
-      const response = await api.post('/analyses', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await api.post('/analyses', formData);
 
-      if (response.success && response.data) {
+      if (response && response.success && response.data) {
         // Persist analysis in session storage and navigate to results view
         sessionStorage.setItem('current_analysis', JSON.stringify(response.data));
         navigate('/results', { state: { analysis: response.data } });
       } else {
-        setErrorMessage(response.message || 'Analysis could not be completed.');
+        setErrorMessage(response?.message || 'Analysis could not be completed.');
       }
     } catch (err) {
       setErrorMessage(err.message || 'An error occurred during resume processing.');
