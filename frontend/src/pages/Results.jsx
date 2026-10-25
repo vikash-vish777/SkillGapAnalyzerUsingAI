@@ -365,26 +365,173 @@ const Results = () => {
                   {rec.resources && rec.resources.length > 0 && (
                     <div className="mt-auto pt-2 border-top">
                       <span className="small text-muted fw-semibold d-block mb-1">
-                        Verified Resources:
+                        Verified Learning Resources:
                       </span>
                       <div className="d-flex flex-wrap gap-2">
-                        {rec.resources.map((res, rIdx) => (
-                          <a
-                            key={rIdx}
-                            href={res.resource_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-outline-primary btn-sm rounded-pill text-decoration-none"
-                          >
-                            <i className="bi bi-box-arrow-up-right me-1"></i> {res.title}
-                          </a>
-                        ))}
+                        {rec.resources.map((res, rIdx) => {
+                          const isYoutube =
+                            res.resource_url.includes('youtube.com') ||
+                            res.resource_url.includes('youtu.be') ||
+                            res.title.toLowerCase().includes('youtube');
+                          return (
+                            <a
+                              key={rIdx}
+                              href={res.resource_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`btn btn-sm rounded-pill text-decoration-none ${
+                                isYoutube ? 'btn-outline-danger' : 'btn-outline-primary'
+                              }`}
+                            >
+                              <i
+                                className={`bi ${
+                                  isYoutube ? 'bi-youtube text-danger' : 'bi-box-arrow-up-right'
+                                } me-1`}
+                              ></i>
+                              {res.title}
+                            </a>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Resume Optimization & Diagnostic Advisory */}
+      {(missing_count > 0 || match_percentage < 80) && (
+        <div className="card border-0 shadow-sm mb-5 p-4 bg-light-subtle border-start border-4 border-warning">
+          <div className="d-flex align-items-center mb-3">
+            <span className="badge bg-warning text-dark me-2 px-3 py-2 rounded-pill">
+              <i className="bi bi-lightbulb-fill me-1"></i> AI Resume Diagnostic
+            </span>
+            <h4 className="fw-bold mb-0 text-dark">
+              Why Your Resume Isn't Fully Aligning & How to Fix It
+            </h4>
+          </div>
+
+          <p className="text-secondary small mb-4">
+            Our analysis identified specific gaps between your current resume content and what recruiters for <strong>{job_role?.title || 'this role'}</strong> expect. Here is targeted guidance on how to strengthen your resume to pass automated ATS filters and catch recruiters' attention.
+          </p>
+
+          <div className="row g-4 mb-4">
+            {/* Specific Issues Identified */}
+            <div className="col-md-6">
+              <div className="card h-100 border-0 bg-white p-3 shadow-sm rounded-3">
+                <h6 className="fw-bold text-danger mb-2">
+                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  Specific Issues Identified
+                </h6>
+                <ul className="small text-muted mb-0 ps-3">
+                  {essential_missing_skills && essential_missing_skills.length > 0 && (
+                    <li className="mb-2">
+                      <strong>Missing Core Essential Competencies:</strong> Your resume lacks evidence for core requirements like{' '}
+                      <span className="text-danger fw-semibold">
+                        {essential_missing_skills.map((s) => s.name).join(', ')}
+                      </span>
+                      . Automated ATS filters will deprioritize applications missing these prerequisites.
+                    </li>
+                  )}
+                  {semantic_similarity?.similarity_percentage < 35 && (
+                    <li className="mb-2">
+                      <strong>Low Industry Keyword Density:</strong> Semantic vocabulary match is at{' '}
+                      <span className="fw-semibold">{semantic_similarity?.similarity_percentage}%</span>. The technical phrasing in your project descriptions diverges from standard market job descriptions.
+                    </li>
+                  )}
+                  <li className="mb-2">
+                    <strong>Absence of Production & Deployment Tooling:</strong> Modern hiring managers look for full software lifecycle evidence (containerization, automated testing, CI/CD, or cloud deployments) beyond isolated coding exercises.
+                  </li>
+                  <li>
+                    <strong>Unquantified Project Impact:</strong> Bullet points that state tasks (e.g. <em>"worked on database"</em>) rather than outcomes fail to signal engineering competence.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Concrete Guidance & Details to Add */}
+            <div className="col-md-6">
+              <div className="card h-100 border-0 bg-white p-3 shadow-sm rounded-3">
+                <h6 className="fw-bold text-success mb-2">
+                  <i className="bi bi-check-circle-fill me-2"></i>
+                  How to Improve Your Resume
+                </h6>
+                <ul className="small text-muted mb-0 ps-3">
+                  <li className="mb-2">
+                    <strong>Add Missing Skills to Your Technical Skills Matrix:</strong> Explicitly add missing technologies once practiced:{' '}
+                    <span className="badge bg-primary-subtle text-primary me-1">
+                      {(essential_missing_skills || []).map((s) => s.name).slice(0, 3).join(', ') || 'Docker, SQL, Git'}
+                    </span>
+                  </li>
+                  <li className="mb-2">
+                    <strong>Adopt Google's XYZ Bullet Formula:</strong> Reformat project bullets to: <em>"Accomplished [X], as measured by [Y], by doing [Z]"</em> (e.g., <em>"Engineered a scalable REST API in Python handling 500+ daily requests by implementing MySQL indexing and connection pooling."</em>)
+                  </li>
+                  <li className="mb-2">
+                    <strong>Include 2 Hands-On Capstone Projects:</strong> Build and link GitHub repositories that specifically showcase the missing skills (e.g., containerized full-stack apps with automated pytest unit tests).
+                  </li>
+                  <li>
+                    <strong>Add Architecture Details:</strong> Specify database schemas, API authentication protocols (JWT, OAuth), and deployment environments (Docker, AWS) in your project descriptions.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Curated YouTube Video Guides */}
+          <div className="bg-white p-3 rounded-3 shadow-sm">
+            <h6 className="fw-bold text-dark mb-2">
+              <i className="bi bi-youtube text-danger me-2"></i>
+              Recommended Masterclasses & Video Tutorials
+            </h6>
+            <div className="row g-3">
+              <div className="col-lg-4">
+                <a
+                  href="https://www.youtube.com/watch?v=y3U_0uS5WkQ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card h-100 border text-decoration-none p-3 shadow-sm"
+                >
+                  <div className="d-flex align-items-center mb-1">
+                    <i className="bi bi-play-circle-fill text-danger fs-4 me-2"></i>
+                    <strong className="text-dark small">How to Write a Tech Resume that Gets Interviews</strong>
+                  </div>
+                  <span className="text-muted small">freeCodeCamp • ATS-friendly structure & project descriptions</span>
+                </a>
+              </div>
+
+              <div className="col-lg-4">
+                <a
+                  href="https://www.youtube.com/watch?v=xpzp6s_J8tI"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card h-100 border text-decoration-none p-3 shadow-sm"
+                >
+                  <div className="d-flex align-items-center mb-1">
+                    <i className="bi bi-play-circle-fill text-danger fs-4 me-2"></i>
+                    <strong className="text-dark small">Software Engineer Resume Teardown & Review</strong>
+                  </div>
+                  <span className="text-muted small">Tech With Tim • Live critique of strong vs weak candidate resumes</span>
+                </a>
+              </div>
+
+              <div className="col-lg-4">
+                <a
+                  href="https://www.youtube.com/watch?v=SLwpqD8n3d0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="card h-100 border text-decoration-none p-3 shadow-sm"
+                >
+                  <div className="d-flex align-items-center mb-1">
+                    <i className="bi bi-play-circle-fill text-danger fs-4 me-2"></i>
+                    <strong className="text-dark small">Full Stack System Architecture & REST APIs</strong>
+                  </div>
+                  <span className="text-muted small">Traversy Media • Essential architectural concepts recruiters probe</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}

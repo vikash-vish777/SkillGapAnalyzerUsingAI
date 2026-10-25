@@ -61,29 +61,62 @@ SKILLS_DATA = [
 RESOURCES_DATA = {
     "React.js": [
         {"title": "Official React Documentation", "url": "https://react.dev/", "type": "documentation", "level": "beginner"},
+        {"title": "React JS Full Course for Beginners (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=bMknfKXIFA8", "type": "tutorial", "level": "beginner"},
         {"title": "Full Stack Open - React", "url": "https://fullstackopen.com/en/part1", "type": "course", "level": "intermediate"}
     ],
     "Docker": [
         {"title": "Docker Getting Started Guide", "url": "https://docs.docker.com/get-started/", "type": "documentation", "level": "beginner"},
+        {"title": "Docker Tutorial for Beginners (TechWorld with Nana YouTube)", "url": "https://www.youtube.com/watch?v=3c-iBn73dDE", "type": "tutorial", "level": "beginner"},
         {"title": "Docker Curriculum", "url": "https://docker-curriculum.com/", "type": "tutorial", "level": "intermediate"}
     ],
     "Python": [
         {"title": "Official Python Tutorial", "url": "https://docs.python.org/3/tutorial/", "type": "documentation", "level": "beginner"},
+        {"title": "Python for Beginners - Full Course (Mosh YouTube)", "url": "https://www.youtube.com/watch?v=_uQrJ0TkZlc", "type": "tutorial", "level": "beginner"},
         {"title": "Real Python Tutorials", "url": "https://realpython.com/", "type": "tutorial", "level": "intermediate"}
     ],
+    "Node.js": [
+        {"title": "Node.js Documentation", "url": "https://nodejs.org/en/docs/", "type": "documentation", "level": "beginner"},
+        {"title": "Node.js and Express.js Full Course (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=Oe421EPjeBE", "type": "tutorial", "level": "intermediate"}
+    ],
+    "SQL": [
+        {"title": "SQL Tutorial - Full Database Course (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=HXV3zeRR3h4", "type": "tutorial", "level": "beginner"},
+        {"title": "PostgreSQL Tutorial for Beginners (Amigoscode YouTube)", "url": "https://www.youtube.com/watch?v=qw--VYLpxG4", "type": "tutorial", "level": "beginner"},
+        {"title": "W3Schools SQL Tutorial", "url": "https://www.w3schools.com/sql/", "type": "tutorial", "level": "beginner"}
+    ],
+    "PostgreSQL": [
+        {"title": "PostgreSQL Tutorial for Beginners (Amigoscode YouTube)", "url": "https://www.youtube.com/watch?v=qw--VYLpxG4", "type": "tutorial", "level": "beginner"},
+        {"title": "Official PostgreSQL Documentation", "url": "https://www.postgresql.org/docs/", "type": "documentation", "level": "intermediate"}
+    ],
+    "MySQL": [
+        {"title": "MySQL Tutorial for Beginners (Programming with Mosh YouTube)", "url": "https://www.youtube.com/watch?v=7S_tz1z_5bA", "type": "tutorial", "level": "beginner"},
+        {"title": "MySQL Official Reference Manual", "url": "https://dev.mysql.com/doc/refman/8.0/en/", "type": "documentation", "level": "intermediate"}
+    ],
+    "Git": [
+        {"title": "Git and GitHub for Beginners - Crash Course (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=RGOj5yH7evk", "type": "tutorial", "level": "beginner"},
+        {"title": "Pro Git Book (Official)", "url": "https://git-scm.com/book/en/v2", "type": "documentation", "level": "intermediate"}
+    ],
+    "FastAPI": [
+        {"title": "FastAPI Tutorial - Python Backend Framework (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=tLKKmouUAMS", "type": "tutorial", "level": "intermediate"},
+        {"title": "Official FastAPI Documentation", "url": "https://fastapi.tiangolo.com/", "type": "documentation", "level": "beginner"}
+    ],
     "Spring Boot": [
-        {"title": "Building a RESTful Web Service with Spring Boot", "url": "https://spring.io/guides/gs/rest-service/", "type": "tutorial", "level": "beginner"},
-        {"title": "Spring Boot Reference Documentation", "url": "https://docs.spring.io/spring-boot/docs/current/reference/html/", "type": "documentation", "level": "intermediate"}
+        {"title": "Spring Boot Full Course - Learn in 4 Hours (Amigoscode YouTube)", "url": "https://www.youtube.com/watch?v=9SGDpanrc8U", "type": "course", "level": "intermediate"},
+        {"title": "Building a RESTful Web Service with Spring Boot", "url": "https://spring.io/guides/gs/rest-service/", "type": "tutorial", "level": "beginner"}
+    ],
+    "Machine Learning": [
+        {"title": "Machine Learning for Everybody - Full Course (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=i_LwzRVP7bg", "type": "course", "level": "beginner"},
+        {"title": "Machine Learning Specialization (Coursera/DeepLearning.AI)", "url": "https://www.coursera.org/specializations/machine-learning-introduction", "type": "course", "level": "intermediate"}
     ],
     "scikit-learn": [
         {"title": "scikit-learn User Guide", "url": "https://scikit-learn.org/stable/user_guide.html", "type": "documentation", "level": "intermediate"},
-        {"title": "Machine Learning with Python and Scikit-Learn", "url": "https://realpython.com/tutorials/machine-learning/", "type": "tutorial", "level": "beginner"}
+        {"title": "Scikit-Learn Crash Course (freeCodeCamp YouTube)", "url": "https://www.youtube.com/watch?v=0B5eIE_1vpU", "type": "tutorial", "level": "intermediate"}
     ],
     "Kubernetes": [
-        {"title": "Kubernetes Basics Tutorial", "url": "https://kubernetes.io/docs/tutorials/kubernetes-basics/", "type": "documentation", "level": "intermediate"},
+        {"title": "Kubernetes Tutorial for Beginners [4 Hours] (TechWorld with Nana YouTube)", "url": "https://www.youtube.com/watch?v=X48VuDVv0do", "type": "tutorial", "level": "intermediate"},
+        {"title": "Kubernetes Basics Tutorial", "url": "https://kubernetes.io/docs/tutorials/kubernetes-basics/", "type": "documentation", "level": "intermediate"}
     ],
     "REST APIs": [
-        {"title": "Architectural Styles and the Design of Network-based Software Architectures", "url": "https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm", "type": "documentation", "level": "advanced"},
+        {"title": "REST API Concepts and Examples (Traversy Media YouTube)", "url": "https://www.youtube.com/watch?v=SLwpqD8n3d0", "type": "tutorial", "level": "beginner"},
         {"title": "RESTful API Design Best Practices", "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design", "type": "documentation", "level": "intermediate"}
     ]
 }
