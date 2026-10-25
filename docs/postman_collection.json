@@ -1,0 +1,359 @@
+{
+  "info": {
+    "_postman_id": "c1f7b89d-4867-4b72-9112-a1f94c03b118",
+    "name": "Skill Gap Analyzer Using AI API",
+    "description": "Comprehensive Postman API test collection for Skill Gap Analyzer backend REST services.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "analysisId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verifies API server status and database connectivity."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.access_token) {",
+                  "    pm.collectionVariables.set('authToken', jsonData.data.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Demo User\",\n  \"email\": \"demo.user@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registers a new user and returns a signed JWT access token."
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.access_token) {",
+                  "    pm.collectionVariables.set('authToken', jsonData.data.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"demo.user@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticates credentials and returns a JWT access token. Rate limited to 5 attempts/minute."
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Retrieves the authenticated user's profile details."
+          }
+        },
+        {
+          "name": "Get User Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "dashboard"]
+            },
+            "description": "Retrieves aggregated analysis metrics, score averages, and recent scans for the dashboard."
+          }
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Confirms client-side token teardown."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Job Roles Catalog",
+      "item": [
+        {
+          "name": "List All Job Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/job-roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["job-roles"]
+            },
+            "description": "Retrieves all standard job roles and count of required skills."
+          }
+        },
+        {
+          "name": "Get Job Role Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/job-roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["job-roles", "1"]
+            },
+            "description": "Retrieves target job role with essential and preferred skill benchmarks and weights."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resume Processing & Skill Gap Analysis",
+      "item": [
+        {
+          "name": "Upload Resume Preview (In-Memory)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resumes/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["resumes", "upload"]
+            },
+            "description": "Validates magic bytes, checks file limits, extracts text, and returns snippet preview. Rate limited to 10/min."
+          }
+        },
+        {
+          "name": "Run Full Skill Gap Analysis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('analysisId', jsonData.data.id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                },
+                {
+                  "key": "job_role_id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "custom_job_description",
+                  "value": "",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/analyses",
+              "host": ["{{baseUrl}}"],
+              "path": ["analyses"]
+            },
+            "description": "Parses resume, extracts skills with evidence, calculates basic/weighted match scores, generates roadmaps, and persists records."
+          }
+        },
+        {
+          "name": "List User Past Analyses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analyses",
+              "host": ["{{baseUrl}}"],
+              "path": ["analyses"]
+            },
+            "description": "Retrieves historical analyses belonging strictly to the authenticated user."
+          }
+        },
+        {
+          "name": "Get Analysis Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analyses/{{analysisId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["analyses", "{{analysisId}}"]
+            },
+            "description": "Fetches stored analysis breakdown, matched competencies, gaps, and roadmaps with user ownership validation."
+          }
+        },
+        {
+          "name": "Download PDF Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analyses/{{analysisId}}/report",
+              "host": ["{{baseUrl}}"],
+              "path": ["analyses", "{{analysisId}}", "report"]
+            },
+            "description": "Generates on-demand in-memory PDF skill gap report and streams it with Content-Type: application/pdf."
+          }
+        },
+        {
+          "name": "Delete Analysis Record",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/analyses/{{analysisId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["analyses", "{{analysisId}}"]
+            },
+            "description": "Deletes analysis and associated skills/recommendations with cascading foreign key deletion."
+          }
+        }
+      ]
+    }
+  ]
+}
