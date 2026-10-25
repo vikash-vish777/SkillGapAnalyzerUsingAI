@@ -98,3 +98,4 @@ Use these talking points when explaining the project's engineering decisions to 
 | **0-Byte Document** | Empty file upload | Rejects immediately with HTTP 400 "The uploaded file is empty (0 bytes)". |
 | **Brute-Force Rate Limiting** | 6 consecutive login attempts | First 5 return HTTP 401; 6th attempt triggers HTTP 429 "Rate limit exceeded: 5 per 1 minute". |
 | **Cross-User Data Isolation** | User B requesting User A's analysis ID | Backend checks ownership; returns HTTP 403 Forbidden. |
+

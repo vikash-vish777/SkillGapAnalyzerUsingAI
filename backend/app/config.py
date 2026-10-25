@@ -2,10 +2,11 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Load environment variables from backend/.env or root .env
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+load_dotenv()
 
 class Config:
     """Base application configuration."""
