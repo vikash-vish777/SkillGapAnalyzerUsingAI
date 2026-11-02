@@ -129,3 +129,11 @@ class Config:
     RATELIMIT_DEFAULT = "200 per day;50 per hour"
 
     RATELIMIT_STRATEGY = "fixed-window"
+
+    # Configuration mapping
+config_by_name = {
+    "development": Config,
+    "testing": Config,
+    "production": Config,
+    "default": Config
+}
