@@ -1,9 +1,47 @@
 from flask import jsonify, current_app
 from werkzeug.exceptions import HTTPException
 from app.errors.exceptions import AppError
+from app.extensions import jwt
 
 def register_error_handlers(app):
     """Registers standardized JSON error handlers for common HTTP status codes."""
+
+    # JWT Error Loaders for consistent JSON error contract
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        return jsonify({
+            "success": False,
+            "message": "Your session has expired. Please log in again.",
+            "data": None,
+            "errors": None
+        }), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        return jsonify({
+            "success": False,
+            "message": "Invalid authentication token. Please log in again.",
+            "data": None,
+            "errors": None
+        }), 401
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        return jsonify({
+            "success": False,
+            "message": "Authentication required. Please log in.",
+            "data": None,
+            "errors": None
+        }), 401
+
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        return jsonify({
+            "success": False,
+            "message": "This token has been revoked. Please log in again.",
+            "data": None,
+            "errors": None
+        }), 401
 
     @app.errorhandler(AppError)
     def handle_app_error(error):

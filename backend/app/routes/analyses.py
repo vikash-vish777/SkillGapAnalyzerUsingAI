@@ -1,6 +1,6 @@
 import io
-from flask import Blueprint, request, jsonify, send_file
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import Blueprint, request, jsonify, send_file, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from app.extensions import db, limiter
 from app.models.job_role import JobRole
 from app.models.user import User
@@ -24,7 +24,6 @@ extractor = SkillExtractor()
 
 @analyses_bp.route("/analyses", methods=["POST"])
 @limiter.limit("10 per minute")
-@jwt_required(optional=True)
 def analyze_skill_gap():
     """Uploads a resume, extracts skills, compares against a target job role, and persists analysis."""
     # 1. Validate file presence
@@ -117,80 +116,90 @@ def analyze_skill_gap():
     semantic_report = SemanticMatcher.compute_similarity(cleaned_text, jd_reference_text)
 
     analysis_id = None
-    user_id = get_jwt_identity()
+    user_id = None
+    try:
+        verify_jwt_in_request(optional=True)
+        user_id = get_jwt_identity()
+    except Exception as exc:
+        current_app.logger.info(f"JWT verification skipped or token expired: {exc}")
+        user_id = None
 
     # 11. Relational Persistence (When User is Authenticated)
     if user_id:
         try:
             uid = int(user_id)
-            # Create Resume record
-            resume = Resume(
-                user_id=uid,
-                original_filename=file_storage.filename,
-                file_type=file_type,
-                processing_status="completed",
-            )
-            db.session.add(resume)
-            db.session.flush()
+            user = db.session.get(User, uid)
+            if user:
+                # Create Resume record
+                resume = Resume(
+                    user_id=uid,
+                    original_filename=file_storage.filename,
+                    file_type=file_type,
+                    processing_status="completed",
+                )
+                db.session.add(resume)
+                db.session.flush()
 
-            # Create Analysis record
-            analysis_record = Analysis(
-                user_id=uid,
-                resume_id=resume.id,
-                job_role_id=role.id,
-                match_percentage=match_result["match_percentage"],
-                weighted_match_percentage=match_result["weighted_match_percentage"],
-                algorithm_version=match_result["algorithm_version"],
-            )
-            db.session.add(analysis_record)
-            db.session.flush()
-            analysis_id = analysis_record.id
+                # Create Analysis record
+                analysis_record = Analysis(
+                    user_id=uid,
+                    resume_id=resume.id,
+                    job_role_id=role.id,
+                    match_percentage=match_result["match_percentage"],
+                    weighted_match_percentage=match_result["weighted_match_percentage"],
+                    algorithm_version=match_result["algorithm_version"],
+                )
+                db.session.add(analysis_record)
+                db.session.flush()
+                analysis_id = analysis_record.id
 
-            # Save Analysis Skills
-            for s in match_result["matched_skills"]:
-                if s.get("skill_id"):
-                    db.session.add(AnalysisSkill(
-                        analysis_id=analysis_record.id,
-                        skill_id=s["skill_id"],
-                        match_status="matched",
-                        importance_weight=s.get("importance_weight", 1.0),
-                        evidence=s.get("evidence"),
-                        confidence_score=s.get("confidence_score", 1.0),
-                    ))
+                # Save Analysis Skills
+                for s in match_result["matched_skills"]:
+                    if s.get("skill_id"):
+                        db.session.add(AnalysisSkill(
+                            analysis_id=analysis_record.id,
+                            skill_id=s["skill_id"],
+                            match_status="matched",
+                            importance_weight=s.get("importance_weight", 1.0),
+                            evidence=s.get("evidence"),
+                            confidence_score=s.get("confidence_score", 1.0),
+                        ))
 
-            for s in match_result["missing_skills"]:
-                if s.get("skill_id"):
-                    db.session.add(AnalysisSkill(
-                        analysis_id=analysis_record.id,
-                        skill_id=s["skill_id"],
-                        match_status="missing",
-                        importance_weight=s.get("importance_weight", 1.0),
-                    ))
+                for s in match_result["missing_skills"]:
+                    if s.get("skill_id"):
+                        db.session.add(AnalysisSkill(
+                            analysis_id=analysis_record.id,
+                            skill_id=s["skill_id"],
+                            match_status="missing",
+                            importance_weight=s.get("importance_weight", 1.0),
+                        ))
 
-            for s in match_result["additional_skills"]:
-                if s.get("skill_id"):
-                    db.session.add(AnalysisSkill(
-                        analysis_id=analysis_record.id,
-                        skill_id=s["skill_id"],
-                        match_status="additional",
-                        evidence=s.get("evidence"),
-                    ))
+                for s in match_result["additional_skills"]:
+                    if s.get("skill_id"):
+                        db.session.add(AnalysisSkill(
+                            analysis_id=analysis_record.id,
+                            skill_id=s["skill_id"],
+                            match_status="additional",
+                            evidence=s.get("evidence"),
+                        ))
 
-            # Save Recommendations
-            for r in recommendations:
-                if r.get("skill_id"):
-                    rec_text = f"{r['reason']} Topics: {', '.join(r.get('recommended_topics', []))}. Exercise: {r.get('practice_exercise')}"
-                    db.session.add(Recommendation(
-                        analysis_id=analysis_record.id,
-                        skill_id=r["skill_id"],
-                        priority=r["priority"],
-                        recommendation_text=rec_text,
-                    ))
+                # Save Recommendations
+                for r in recommendations:
+                    if r.get("skill_id"):
+                        rec_text = f"{r['reason']} Topics: {', '.join(r.get('recommended_topics', []))}. Exercise: {r.get('practice_exercise')}"
+                        db.session.add(Recommendation(
+                            analysis_id=analysis_record.id,
+                            skill_id=r["skill_id"],
+                            priority=r["priority"],
+                            recommendation_text=rec_text,
+                        ))
 
-            db.session.commit()
+                db.session.commit()
+            else:
+                current_app.logger.info(f"User ID {uid} does not exist in DB; skipping persistence.")
         except Exception as exc:
             db.session.rollback()
-            print(f"[!] Warning: Analysis persistence failed: {str(exc)}")
+            current_app.logger.warning(f"Analysis persistence failed: {str(exc)}")
 
     response_data = {
         "id": analysis_id,

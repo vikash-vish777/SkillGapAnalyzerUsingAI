@@ -31,7 +31,21 @@ api.interceptors.response.use(
     if (error.response) {
       // Server returned error status code (4xx, 5xx)
       const data = error.response.data;
-      const message = data?.message || 'An unexpected error occurred.';
+      const message =
+        data?.message ||
+        data?.msg ||
+        data?.error ||
+        (error.response.status === 401
+          ? 'Your authentication session has expired or is invalid. Please log in again.'
+          : null) ||
+        'An unexpected error occurred.';
+
+      // If token is invalid or expired (401), clean up stale session credentials from localStorage
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+
       return Promise.reject(new Error(message));
     } else if (error.request) {
       // Request was made but no response received (network issue / server down)
