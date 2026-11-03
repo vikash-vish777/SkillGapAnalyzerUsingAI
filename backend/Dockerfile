@@ -1,4 +1,5 @@
 # Multi-stage production Dockerfile for Flask Backend
+
 FROM python:3.13-slim AS runner
 
 WORKDIR /app
@@ -15,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install dependencies
 COPY backend/requirements.txt ./requirements.txt
+
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn
@@ -27,10 +29,6 @@ WORKDIR /app/backend
 
 RUN chmod +x entrypoint.sh
 
-EXPOSE 5000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD-SHELL curl -f http://127.0.0.1:${PORT:-10000}/api/health || exit 1
+EXPOSE 10000
 
 ENTRYPOINT ["./entrypoint.sh"]
-
